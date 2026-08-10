@@ -1,5 +1,5 @@
 # 📚 LSMS: Simple Library System for my Mother's School
-[LSMS-Preview.png](https://github.com/user-attachments/assets/9b12c4a9-d738-4ea6-8c1c-139f9124489d)
+![LSMS-Preview.png](https://github.com/user-attachments/assets/9b12c4a9-d738-4ea6-8c1c-139f9124489d)
 A lightweight, locally hosted library management system built to simplify daily book borrowing and returning for a primary school. Designed specifically to run on a single local computer, it features a clean Thai UI, an intuitive Admin Panel for teachers, and real-time LINE Chat notifications for tracking library activity.
 
 ## ✨ Project Overview
