@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSMS - Teacher Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2, h3 { color: #333; margin-top: 0; }
+        
+        /* Buttons */
+        button { padding: 10px 15px; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; color: white; }
+        .btn-green { background-color: #4CAF50; } .btn-green:hover { background-color: #45a049; }
+        .btn-blue { background-color: #2196F3; } .btn-blue:hover { background-color: #0b7dda; }
+        .btn-red { background-color: #f44336; padding: 5px 10px; text-decoration: none; border-radius: 3px; font-size: 12px;} .btn-red:hover { background-color: #d32f2f; }
+        .btn-logout { background-color: #f44336; font-size: 16px; }
+        .btn-gray { background-color: #9e9e9e; text-decoration: none; padding: 10px 15px; border-radius: 5px; color: white; }
+        
+        /* Tabs */
+        .tab-menu { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { background-color: #ddd; color: #333; padding: 10px 20px; border-radius: 5px; font-size: 16px; cursor: pointer; }
+        .tab-btn.active { background-color: #2196F3; color: white; }
+        .tab-content { display: none; } /* This hides inactive tabs */
+
+        /* Forms & Tables */
+        input, select { padding: 8px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; }
+        .form-inline { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 15px; background: #f9f9f9; padding: 15px; border-radius: 5px; border-left: 5px solid #2196F3; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f2f2f2; color: #333; }
+        tr:hover { background-color: #f9f9f9; }
+        .action-borrow { color: #d9534f; font-weight: bold; } 
+        .action-return { color: #5cb85c; font-weight: bold; }
+        .message { padding: 10px; background-color: #e7f3fe; border-left: 6px solid #2196F3; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>Welcome, Teacher {{ name }}! 👩‍🏫</h2>
+        <a href="/logout"><button class="btn-logout">Logout</button></a>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- TAB NAVIGATION -->
+    <div class="tab-menu">
+        <div class="tab-btn" id="btn-logs" onclick="openTab('logs-tab', 'btn-logs')">📋 Logs</div>
+        <div class="tab-btn" id="btn-books" onclick="openTab('books-tab', 'btn-books')">📚 Manage Books</div>
+        <div class="tab-btn" id="btn-users" onclick="openTab('users-tab', 'btn-users')">👥 Manage Users</div>
+    </div>
+
+    <!-- 1. LOGS TAB -->
+    <div id="logs-tab" class="tab-content card">
+        <h3>Library Logs</h3>
+        
+        <form action="/teacher" method="POST" class="form-inline" style="border-left-color: #9e9e9e;">
+            <label><strong>Filter Date:</strong></label>
+            <input type="date" name="selected_date" value="{{ selected_date }}">
+            <button type="submit" class="btn-blue">Filter</button>
+            
+            {% if selected_date %}
+                <a href="/teacher" class="btn-gray">Show All</a>
+            {% endif %}
+        </form>
+
+        <form action="/add_log" method="POST" class="form-inline">
+            <strong>Add Manual Log:</strong>
+            <input type="text" name="user_id" placeholder="User ID" required autocomplete="off">
+            <input type="text" name="book_id" placeholder="Book ID" required autocomplete="off">
+            <select name="action">
+                <option value="Borrow">Borrow</option>
+                <option value="Return">Return</option>
+            </select>
+            <button type="submit" class="btn-green">Add Log</button>
+        </form>
+
+        <table>
+            <tr><th>Date</th><th>Time</th><th>Student</th><th>Book</th><th>Action</th><th>Manage</th></tr>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.log_date }}</td>
+                <td>{{ log.log_time }}</td>
+                <td>{{ log.student_name }}</td>
+                <td>{{ log.book_title }}</td>
+                <td class="{% if log.action == 'Borrow' %}action-borrow{% else %}action-return{% endif %}">{{ log.action }}ed</td>
+                <td><a href="/delete_log/{{ log.log_id }}" onclick="return confirm('Delete this log?')" class="btn-red">Delete</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- 2. BOOKS TAB -->
+    <div id="books-tab" class="tab-content card">
+        <h3>Manage Books</h3>
+        
+        <form action="/add_book" method="POST" class="form-inline">
+            <strong>Add New Book:</strong>
+            <input type="text" name="book_id" placeholder="New Book ID (e.g. B02)" required autocomplete="off">
+            <input type="text" name="title" placeholder="Book Title" required autocomplete="off">
+            <button type="submit" class="btn-green">Add Book</button>
+        </form>
+
+        <table>
+            <tr><th>Book ID</th><th>Title</th><th>Status</th><th>Manage</th></tr>
+            {% for book in books %}
+            <tr>
+                <td>{{ book.book_id }}</td>
+                <td>{{ book.title }}</td>
+                <td>{{ book.status }}</td>
+                <td><a href="/delete_book/{{ book.book_id }}" onclick="return confirm('Delete {{ book.title }}?')" class="btn-red">Delete</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- 3. USERS TAB -->
+    <div id="users-tab" class="tab-content card">
+        <h3>Manage Users</h3>
+        
+        <form action="/add_user" method="POST" class="form-inline">
+            <strong>Add New User:</strong>
+            <input type="text" name="user_id" placeholder="ID (e.g. S02)" required autocomplete="off">
+            <input type="text" name="name" placeholder="Full Name" required autocomplete="off">
+            <select name="role">
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+            </select>
+            <input type="text" name="pin" placeholder="Login PIN" required autocomplete="off">
+            <button type="submit" class="btn-green">Add User</button>
+        </form>
+
+        <table>
+            <tr><th>User ID</th><th>Name</th><th>Role</th><th>PIN</th><th>Manage</th></tr>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.name }}</td>
+                <td style="text-transform: capitalize;">{{ user.role }}</td>
+                <td>{{ user.pin }}</td>
+                <td>
+                    {% if user.id == current_user_id %}
+                        <span style="color: gray; font-size: 12px;">(You)</span>
+                    {% else %}
+                        <a href="/delete_user/{{ user.id }}" onclick="return confirm('Delete {{ user.name }}?')" class="btn-red">Delete</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- JavaScript for Bulletproof Tabs & Tab Memory -->
+    <script>
+        function openTab(tabId, btnId) {
+            // 1. Force hide all content sections
+            document.getElementById('logs-tab').style.display = 'none';
+            document.getElementById('books-tab').style.display = 'none';
+            document.getElementById('users-tab').style.display = 'none';
+
+            // 2. Remove "active" color from all buttons
+            document.getElementById('btn-logs').classList.remove('active');
+            document.getElementById('btn-books').classList.remove('active');
+            document.getElementById('btn-users').classList.remove('active');
+
+            // 3. Show the selected tab and highlight the button
+            document.getElementById(tabId).style.display = 'block';
+            document.getElementById(btnId).classList.add('active');
+
+            // 4. Save to browser memory so it doesn't reset when page reloads!
+            sessionStorage.setItem('savedTab', tabId);
+            sessionStorage.setItem('savedBtn', btnId);
+        }
+
+        // When the page first loads
+        window.onload = function() {
+            let savedTab = sessionStorage.getItem('savedTab');
+            let savedBtn = sessionStorage.getItem('savedBtn');
+            
+            // If there's a saved tab in memory, open it. Otherwise, open Logs.
+            if (savedTab && savedBtn) {
+                openTab(savedTab, savedBtn);
+            } else {
+                openTab('logs-tab', 'btn-logs');
+            }
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSMS - สำหรับคุณครู</title>
+    <style>
+        body { font-family: 'Sarabun', Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2, h3 { color: #333; margin-top: 0; }
+        
+        button { padding: 10px 15px; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; color: white; }
+        .btn-green { background-color: #4CAF50; } .btn-green:hover { background-color: #45a049; }
+        .btn-blue { background-color: #2196F3; } .btn-blue:hover { background-color: #0b7dda; }
+        .btn-red { background-color: #f44336; padding: 5px 10px; text-decoration: none; border-radius: 3px; font-size: 12px;} .btn-red:hover { background-color: #d32f2f; }
+        .btn-logout { background-color: #f44336; font-size: 16px; }
+        .btn-gray { background-color: #9e9e9e; text-decoration: none; padding: 10px 15px; border-radius: 5px; color: white; }
+        
+        .tab-menu { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { background-color: #ddd; color: #333; padding: 10px 20px; border-radius: 5px; font-size: 16px; cursor: pointer; }
+        .tab-btn.active { background-color: #2196F3; color: white; }
+        .tab-content { display: none; }
+
+        input, select { padding: 8px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; }
+        .form-inline { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 15px; background: #f9f9f9; padding: 15px; border-radius: 5px; border-left: 5px solid #2196F3; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f2f2f2; color: #333; }
+        tr:hover { background-color: #f9f9f9; }
+        .action-borrow { color: #d9534f; font-weight: bold; } 
+        .action-return { color: #5cb85c; font-weight: bold; }
+        .message { padding: 10px; background-color: #e7f3fe; border-left: 6px solid #2196F3; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>ยินดีต้อนรับ, คุณครู {{ name }}! 👩‍🏫</h2>
+        <a href="/logout"><button class="btn-logout">ออกจากระบบ</button></a>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- TAB NAVIGATION -->
+    <div class="tab-menu">
+        <div class="tab-btn" id="btn-logs" onclick="openTab('logs-tab', 'btn-logs')">📋 ประวัติการใช้งาน</div>
+        <div class="tab-btn" id="btn-books" onclick="openTab('books-tab', 'btn-books')">📚 จัดการหนังสือ</div>
+        <div class="tab-btn" id="btn-users" onclick="openTab('users-tab', 'btn-users')">👥 จัดการผู้ใช้</div>
+    </div>
+
+    <!-- 1. LOGS TAB -->
+    <div id="logs-tab" class="tab-content card">
+        <h3>ประวัติการเข้าใช้ห้องสมุด</h3>
+        
+        <form action="/teacher" method="POST" class="form-inline" style="border-left-color: #9e9e9e;">
+            <label><strong>เลือกวันที่:</strong></label>
+            <input type="date" name="selected_date" value="{{ selected_date }}">
+            <button type="submit" class="btn-blue">ค้นหา</button>
+            
+            {% if selected_date %}
+                <a href="/teacher" class="btn-gray">แสดงทั้งหมด</a>
+            {% endif %}
+        </form>
+
+        <form action="/add_log" method="POST" class="form-inline">
+            <strong>เพิ่มประวัติด้วยตนเอง:</strong>
+            <input type="text" name="user_id" placeholder="รหัสผู้ใช้" required autocomplete="off">
+            <input type="text" name="book_id" placeholder="รหัสหนังสือ" required autocomplete="off">
+            <select name="action">
+                <option value="Borrow">ยืม</option>
+                <option value="Return">คืน</option>
+            </select>
+            <button type="submit" class="btn-green">บันทึก</button>
+        </form>
+
+        <table>
+            <tr><th>วันที่</th><th>เวลา</th><th>ชื่อผู้ใช้</th><th>ชื่อหนังสือ</th><th>รายการ</th><th>จัดการ</th></tr>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.log_date }}</td>
+                <td>{{ log.log_time }}</td>
+                <td>{{ log.student_name }}</td>
+                <td>{{ log.book_title }}</td>
+                <td class="{% if log.action == 'Borrow' %}action-borrow{% else %}action-return{% endif %}">
+                    {% if log.action == 'Borrow' %}ยืม{% else %}คืน{% endif %}
+                </td>
+                <td><a href="/delete_log/{{ log.log_id }}" onclick="return confirm('ต้องการลบประวัตินี้ใช่หรือไม่?')" class="btn-red">ลบ</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- 2. BOOKS TAB -->
+    <div id="books-tab" class="tab-content card">
+        <h3>จัดการหนังสือ</h3>
+        
+        <form action="/add_book" method="POST" class="form-inline">
+            <strong>เพิ่มหนังสือใหม่:</strong>
+            <input type="text" name="book_id" placeholder="รหัสหนังสือ (เช่น B02)" required autocomplete="off">
+            <input type="text" name="title" placeholder="ชื่อหนังสือ" required autocomplete="off">
+            <button type="submit" class="btn-green">เพิ่มหนังสือ</button>
+        </form>
+
+        <table>
+            <tr><th>รหัสหนังสือ</th><th>ชื่อหนังสือ</th><th>สถานะ</th><th>จัดการ</th></tr>
+            {% for book in books %}
+            <tr>
+                <td>{{ book.book_id }}</td>
+                <td>{{ book.title }}</td>
+                <td>{% if book.status == 'Available' %}ว่าง{% else %}ถูกยืม{% endif %}</td>
+                <td><a href="/delete_book/{{ book.book_id }}" onclick="return confirm('ต้องการลบ {{ book.title }} ใช่หรือไม่?')" class="btn-red">ลบ</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- 3. USERS TAB -->
+    <div id="users-tab" class="tab-content card">
+        <h3>จัดการผู้ใช้</h3>
+        
+        <form action="/add_user" method="POST" class="form-inline">
+            <strong>เพิ่มผู้ใช้ใหม่:</strong>
+            <input type="text" name="user_id" placeholder="รหัส (เช่น S02)" required autocomplete="off">
+            <input type="text" name="name" placeholder="ชื่อ-นามสกุล" required autocomplete="off">
+            <select name="role">
+                <option value="student">นักเรียน</option>
+                <option value="teacher">คุณครู</option>
+            </select>
+            <input type="text" name="pin" placeholder="รหัสผ่าน (PIN)" required autocomplete="off">
+            <button type="submit" class="btn-green">เพิ่มผู้ใช้</button>
+        </form>
+
+        <table>
+            <tr><th>รหัสผู้ใช้</th><th>ชื่อ-นามสกุล</th><th>ประเภท</th><th>รหัสผ่าน</th><th>จัดการ</th></tr>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.name }}</td>
+                <td>{% if user.role == 'student' %}นักเรียน{% else %}คุณครู{% endif %}</td>
+                <td>{{ user.pin }}</td>
+                <td>
+                    {% if user.id == current_user_id %}
+                        <span style="color: gray; font-size: 12px;">(คุณ)</span>
+                    {% else %}
+                        <a href="/delete_user/{{ user.id }}" onclick="return confirm('ต้องการลบ {{ user.name }} ใช่หรือไม่?')" class="btn-red">ลบ</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <script>
+        function openTab(tabId, btnId) {
+            document.getElementById('logs-tab').style.display = 'none';
+            document.getElementById('books-tab').style.display = 'none';
+            document.getElementById('users-tab').style.display = 'none';
+
+            document.getElementById('btn-logs').classList.remove('active');
+            document.getElementById('btn-books').classList.remove('active');
+            document.getElementById('btn-users').classList.remove('active');
+
+            document.getElementById(tabId).style.display = 'block';
+            document.getElementById(btnId).classList.add('active');
+
+            sessionStorage.setItem('savedTab', tabId);
+            sessionStorage.setItem('savedBtn', btnId);
+        }
+
+        window.onload = function() {
+            let savedTab = sessionStorage.getItem('savedTab');
+            let savedBtn = sessionStorage.getItem('savedBtn');
+            
+            if (savedTab && savedBtn) {
+                openTab(savedTab, savedBtn);
+            } else {
+                openTab('logs-tab', 'btn-logs');
+            }
+        }
+    </script>
+
+</body>
+</html>

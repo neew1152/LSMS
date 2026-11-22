@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSMS - Student Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .container { display: flex; gap: 20px; flex-wrap: wrap; }
+        .card { flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-width: 300px; }
+        h2 { color: #333; margin-top: 0; }
+        input[type="text"] { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+        button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
+        button.logout { background-color: #f44336; }
+        button:hover { opacity: 0.9; }
+        .message { padding: 10px; background-color: #e7f3fe; border-left: 6px solid #2196F3; margin-bottom: 15px; }
+        .book-item { display: flex; align-items: center; font-size: 18px; margin: 10px 0; padding: 10px; background: #f9f9f9; border-radius: 5px; }
+        .book-item input { margin-right: 15px; width: 20px; height: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>Welcome, {{ name }}! 📚</h2>
+        <a href="/logout"><button class="logout">Logout</button></a>
+    </div>
+
+    <!-- Flash Messages (Success/Error Alerts) -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="container">
+        <!-- BORROW SECTION -->
+        <div class="card">
+            <h2>Borrow a Book</h2>
+            <p>Enter the Book ID to borrow it.</p>
+            <form action="/borrow" method="POST">
+                <input type="text" name="book_id" placeholder="e.g. B01" required autocomplete="off">
+                <br>
+                <button type="submit">Borrow</button>
+            </form>
+        </div>
+
+        <!-- RETURN SECTION -->
+        <div class="card">
+            <h2>Return Books</h2>
+            <p>Select the books you want to return.</p>
+            
+            {% if borrowed_books %}
+                <form action="/return" method="POST">
+                    {% for book in borrowed_books %}
+                        <label class="book-item">
+                            <input type="checkbox" name="book_ids" value="{{ book.book_id }}">
+                            {{ book.book_id }} - {{ book.title }}
+                        </label>
+                    {% endfor %}
+                    <button type="submit" style="margin-top: 10px;">Return Selected</button>
+                </form>
+            {% else %}
+                <p style="color: gray;"><i>You have no books to return right now.</i></p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 10 Minute Auto-Logout Script -->
+    <script>
+        let logoutTimer;
+        
+        function resetTimer() {
+            clearTimeout(logoutTimer);
+            // 10 minutes = 600,000 milliseconds
+            logoutTimer = setTimeout(function() {
+                alert("You have been logged out due to inactivity.");
+                window.location.href = '/logout';
+            }, 600000); 
+        }
+
+        // Reset timer when student moves mouse or types
+        window.onload = resetTimer;
+        document.onmousemove = resetTimer;
+        document.onkeypress = resetTimer;
+        document.ontouchstart = resetTimer; // For touch screens
+    </script>
+
+</body>
+</html>
