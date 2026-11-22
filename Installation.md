@@ -17,6 +17,13 @@ pip install Flask requests
 python init_db.py
 python app.py
 ```
+
+## Default Test Accounts (from `init_db.py`)
+If you are running this project for the first time, the following test accounts are generated:
+*   **Student:** ID: `S01` | PIN: `1234`
+*   **Teacher:** ID: `T01` | PIN: `0000`
+*   **Test Book:** ID: `B01` | Title: `The Little Prince`
+
 ### LINE Credentials
 1. Go to the [LINE Developers Console](https://developers.line.biz/console/) and log in with your normal LINE account.
 2. Click **Create a New Provider** (name it "SchoolLibrary").
