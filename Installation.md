@@ -1,18 +1,5 @@
-> https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe
-
 ```bash
-C:.
-│   app.py
-│   init_db.py
-│   library.db
-│
-└───templates
-        login.html
-        student.html
-        teacher.html
-```
-
-```bash
+winget install Python.Python.3.10
 pip install Flask requests
 python init_db.py
 python app.py
