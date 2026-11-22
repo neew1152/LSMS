@@ -1,6 +1,6 @@
 # Simple Library System for my Mother's School
 
-![](Preview.png)
+![Preview.png](./Preview.png)
 
 A lightweight, locally hosted library management system built to simplify daily book borrowing and returning for a primary school. Designed specifically to run on a single local computer, it features a clean Thai UI, an intuitive Admin Panel for teachers, and real-time LINE Chat notifications for tracking library activity.
 
